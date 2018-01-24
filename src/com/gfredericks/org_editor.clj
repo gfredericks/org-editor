@@ -86,42 +86,46 @@
            (into {})))))
 
 (defn prop-assoc
-  [section k v]
-  (let [{::keys [prelude]} section
-        conformed (s/conform ::prelude-with-properties prelude)]
-    (if (= ::s/invalid conformed)
-      (let [prop-lines (indent-lines (read-level section)
-                                     [":PROPERTIES:"
-                                      (format ":%s: %s" k v)
-                                      ":END:"])]
-        (assoc section ::prelude
-               (if (some->> (first prelude)
-                            (re-find #"DEADLINE|SCHEDULED"))
-                 (concat (take 1 prelude) prop-lines (drop 1 prelude))
-                 (concat prop-lines prelude))))
+  ([section k v]
+   (let [{::keys [prelude]} section
+         conformed (s/conform ::prelude-with-properties prelude)]
+     (if (= ::s/invalid conformed)
+       (let [prop-lines (indent-lines (read-level section)
+                                      [":PROPERTIES:"
+                                       (format ":%s: %s" k v)
+                                       ":END:"])]
+         (assoc section ::prelude
+                (if (some->> (first prelude)
+                             (re-find #"DEADLINE|SCHEDULED"))
+                  (concat (take 1 prelude) prop-lines (drop 1 prelude))
+                  (concat prop-lines prelude))))
 
-      (let [kv-pair-lines
-            (loop [passed-props []
-                   more-props (:props conformed)]
-              (if (empty? more-props)
-                ;; no matches, add a new line
-                (concat passed-props
-                        (indent-lines (read-level section)
-                                      [(format ":%s: %s" k v)]))
-                (or (if-let [[_ whitespace1 k' whitespace2 v']
-                             (re-matches prop-line-pattern (first more-props))]
-                      (if (= (string/lower-case k)
-                             (string/lower-case k'))
-                        ;; found a match; update this line
-                        (concat passed-props
-                                [(str whitespace1 ":" k' ":" whitespace2 v)]
-                                (rest more-props))))
-                    (recur (conj passed-props (first more-props))
-                           (rest more-props)))
-                ))]
-        (assoc section ::prelude
-               (concat (some-> (:scheduling-line conformed) vector)
-                       [(:prop-start conformed)]
-                       kv-pair-lines
-                       [(:prop-end conformed)]
-                       (:remaining-prelude conformed)))))))
+       (let [kv-pair-lines
+             (loop [passed-props []
+                    more-props (:props conformed)]
+               (if (empty? more-props)
+                 ;; no matches, add a new line
+                 (concat passed-props
+                         (indent-lines (read-level section)
+                                       [(format ":%s: %s" k v)]))
+                 (or (if-let [[_ whitespace1 k' whitespace2 v']
+                              (re-matches prop-line-pattern (first more-props))]
+                       (if (= (string/lower-case k)
+                              (string/lower-case k'))
+                         ;; found a match; update this line
+                         (concat passed-props
+                                 [(str whitespace1 ":" k' ":" whitespace2 v)]
+                                 (rest more-props))))
+                     (recur (conj passed-props (first more-props))
+                            (rest more-props)))
+                 ))]
+         (assoc section ::prelude
+                (concat (some-> (:scheduling-line conformed) vector)
+                        [(:prop-start conformed)]
+                        kv-pair-lines
+                        [(:prop-end conformed)]
+                        (:remaining-prelude conformed)))))))
+  ([section k v & more-kvs]
+   (reduce (fn [section [k v]] (prop-assoc section k v))
+           section
+           (cons [k v] (partition 2 more-kvs)))))
