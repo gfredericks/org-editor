@@ -7,7 +7,7 @@ It's just for me, so it's not all that good or anything.
 ## Obtention
 
 ``` clojure
-[com.gfredericks/org-editor "0.1.0-SNAPSHOT"]
+[com.gfredericks/org-editor "0.1.0"]
 ```
 
 ## Usage
