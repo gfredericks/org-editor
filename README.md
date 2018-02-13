@@ -67,7 +67,8 @@ returns:
             #:com.gfredericks.org-editor
             {:header "* Welp!",
              :prelude (""),
-             :sections [{:header "** Last heading, 2 or whatever",
+             :sections [#:com.gfredericks.org-editor
+                        {:header "** Last heading, 2 or whatever",
                          :prelude (""
                                    "   It's all just lines!"),
                          :sections []}]}]}
