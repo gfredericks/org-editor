@@ -42,29 +42,29 @@ Then `(with-open [r (clojure.java.io/reader "my.org")] (org-editor/parse-file r)
 returns:
 
 ``` clojure
-#::com.gfredericks.org-editor
+#:com.gfredericks.org-editor
 {:prelude ("You can have lines"
            "before the first"
            ""
            "heading"
            ""),
- :sections [#::com.gfredericks.org-editor
+ :sections [#:com.gfredericks.org-editor
             {:header "* Heading 1",
              :prelude ("  A few"
                        ""
                        "  lines here"),
-             :sections [#::com.gfredericks.org-editor
+             :sections [#:com.gfredericks.org-editor
                         {:header "** Heading 1a",
                          :prelude (),
-                         :sections [#::com.gfredericks.org-editor
+                         :sections [#:com.gfredericks.org-editor
                                     {:header "*** Whatever you want",
                                      :prelude (),
                                      :sections []}]}]}
-            #::com.gfredericks.org-editor
+            #:com.gfredericks.org-editor
             {:header "* TODO Heading 2                                                       :atag:",
              :prelude (),
              :sections []}
-            #::com.gfredericks.org-editor
+            #:com.gfredericks.org-editor
             {:header "* Welp!",
              :prelude (""),
              :sections [{:header "** Last heading, 2 or whatever",
