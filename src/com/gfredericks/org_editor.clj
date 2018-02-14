@@ -22,24 +22,30 @@
     (let [lines (line-seq br)
 
           [prelude sections]
-          ((fn parse-prelude-and-sections [lines min-level]
-             (let [[prelude more-lines] (split-with #(not (re-matches header-line-regex %)) lines)]
-               (loop [sections []
-                      lines    more-lines]
-                 (if (empty? lines)
+          ((fn parse-prelude-and-sections [numbered-lines min-level]
+             (let [[numbered-prelude more-numbered-lines]
+                   (split-with #(not (re-matches header-line-regex (first %)))
+                               numbered-lines)
+
+                   prelude (map first numbered-prelude)]
+               (loop [sections       []
+                      numbered-lines more-numbered-lines]
+                 (if (empty? numbered-lines)
                    [prelude sections []]
-                   (let [[line & more-lines] lines
+                   (let [[[line line-number] & more-numbered-lines] numbered-lines
                          [whole-line level] (re-matches header-line-regex line)]
                      (if (< (count level) min-level)
-                       [prelude sections lines]
-                       (let [[prelude subsections more-lines]
-                             (parse-prelude-and-sections more-lines (inc (count level)))]
+                       [prelude sections numbered-lines]
+                       (let [[prelude subsections more-numbered-lines]
+                             (parse-prelude-and-sections more-numbered-lines (inc (count level)))]
                          (recur (conj sections
-                                      #::{:header   whole-line
-                                          :prelude  prelude
-                                          :sections subsections})
-                                more-lines))))))))
-           lines 1)]
+                                      (vary-meta
+                                       #::{:header   whole-line
+                                           :prelude  prelude
+                                           :sections subsections}
+                                       assoc ::line-number line-number))
+                                more-numbered-lines))))))))
+           (map vector lines (rest (range))) 1)]
       #::{:prelude  prelude
           :sections sections})))
 
