@@ -71,6 +71,9 @@
        (take-while #{\*})
        (count)))
 
+;; TODO: org-mode seems to allow the properties section to appear anywhere
+;; in the prelude, despite the documentation, and in any case it intentionally
+;; inserts other things above properties, like logbook entries and other notes
 (s/def ::prelude-with-properties
   (s/cat :scheduling-line   (s/? ::line)
          :prop-start        #(re-matches #"(?i)\s*:PROPERTIES:\s*" %)
