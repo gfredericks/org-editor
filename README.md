@@ -2,8 +2,6 @@
 
 A Clojure library that can edit org-files, attempting to minimize diffs.
 
-It's just for me, so it's not all that good or anything.
-
 ## Obtention
 
 ``` clojure
