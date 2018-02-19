@@ -1,4 +1,4 @@
-(defproject  com.gfredericks/org-editor "0.1.2-SNAPSHOT"
+(defproject  com.gfredericks/org-editor "0.1.2"
   :description "Some clojure code for reading and writing org files"
   :url "https://github.com/gfredericks/org-editor"
   :license {:name "Eclipse Public License"
