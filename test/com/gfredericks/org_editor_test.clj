@@ -1,11 +1,20 @@
 (ns com.gfredericks.org-editor-test
   (:require
+   [clojure.spec.test.alpha         :as st]
    [clojure.string                  :as string]
-   [clojure.test                    :refer [are deftest is]]
+   [clojure.test                    :refer [are deftest is use-fixtures]]
    [clojure.test.check.clojure-test :refer [defspec]]
    [clojure.test.check.generators   :as gen]
    [clojure.test.check.properties   :as prop]
    [com.gfredericks.org-editor      :as org-editor]))
+
+(use-fixtures :each
+  (fn [t]
+    (st/instrument (st/instrumentable-syms))
+    (try
+      (t)
+      (finally
+        (st/unstrument)))))
 
 (deftest parse-file-test
   (are [in out] (= out (org-editor/parse-file
@@ -90,3 +99,48 @@
                    "lines"])))
     (is (= assoc'd (org-editor/prop-assoc assoc'd "K1" "K2"))
         "Is idempotent")))
+
+(deftest read-tags-test
+  (are [header tags] (= tags (org-editor/read-tags header))
+    "* This has no tags"
+    []
+
+    "** TODO This has a couple tags              :welp:hokay:totes:"
+    ["welp" "hokay" "totes"]))
+
+(deftest set-tags-test
+  (are [in-header tags out-header]
+      (= out-header (org-editor/set-tags in-header tags))
+    "*** TODO [#A] THOMAS THOMAS"
+    []
+    "*** TODO [#A] THOMAS THOMAS"
+
+    "*** TODO [#A] THOMAS THOMAS"
+    ["foo" "bar" "bengles"]
+    "*** TODO [#A] THOMAS THOMAS                                 :foo:bar:bengles:"
+
+    "*** TODO [#A] THOMAS THOMAS                                 :foo:bar:bengles:"
+    ["weeeeeeelp"]
+    "*** TODO [#A] THOMAS THOMAS                                      :weeeeeeelp:"))
+
+(deftest conj-tag-test
+  (are [in-header tag out-header]
+      (= out-header (org-editor/conj-tag in-header tag))
+    "* This is my header"
+    "thomas"
+    "* This is my header                                                  :thomas:"
+
+    "* HEADED H HEDAD EH      UMMM    :jokes:jokes:"
+    "could-be-anything"
+    "* HEADED H HEDAD EH      UMMM                 :jokes:jokes:could-be-anything:"))
+
+(deftest disj-tag-test
+  (are [in-header tag out-header]
+      (= out-header (org-editor/disj-tag in-header tag))
+    "* This is my header"
+    "thomas"
+    "* This is my header"
+
+    "* HEADED H HEDAD EH      UMMM    :jokes:foo:jokes:"
+    "jokes"
+    "* HEADED H HEDAD EH      UMMM                                           :foo:"))

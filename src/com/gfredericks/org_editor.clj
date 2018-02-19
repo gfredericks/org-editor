@@ -138,3 +138,63 @@
    (reduce (fn [section [k v]] (prop-assoc section k v))
            section
            (cons [k v] (partition 2 more-kvs)))))
+
+;;
+;; Tags
+;;
+
+(def ^:private header-with-tags-regex
+  #"(.*?)\s*(:(?:[^\s:]+:)+\s*)?$")
+
+(s/def ::tag (s/and string?
+                    #(re-matches #"^[^:\s]+$" %)))
+(s/def ::tags (s/coll-of ::tag :kind sequential?))
+
+(s/fdef read-tags
+        :args (s/cat :header ::header)
+        :ret ::tags)
+(defn read-tags
+  "Returns a sequence of strings"
+  [header]
+  (let [[_ pre-tags tags] (re-matches header-with-tags-regex header)]
+    (if tags
+      (rest (string/split tags #":"))
+      ())))
+
+(s/fdef set-tags
+  :args (s/cat :header ::header :tags ::tags)
+  :ret ::header)
+(defn set-tags
+  [header tags]
+  (let [[_ pre-tags] (re-matches header-with-tags-regex header)]
+    (if (empty? tags)
+      pre-tags
+      (let [tags-section (format ":%s:" (string/join ":" tags))]
+        (str pre-tags
+             ;; org-mode aims these to make the line 77 chars wide
+             (apply str (repeat
+                         (-> 77
+                             (- (count pre-tags) (count tags-section))
+                             (max 1))
+                         \space))
+             tags-section)))))
+
+(s/fdef conj-tag
+  :args (s/cat :header ::header :tag ::tag)
+  :ret ::header)
+(defn conj-tag
+  "Adds the given tag to the end of the tags section, if the tag
+  isn't already there."
+  [header tag]
+  (let [tags (read-tags header)]
+    (if (some #{tag} tags)
+      header
+      (set-tags header (concat tags [tag])))))
+
+(s/fdef disj-tag
+  :args (s/cat :header ::header :tag ::tag)
+  :ret ::header)
+(defn disj-tag
+  "Removes the tag from the header, including duplicates."
+  [header tag]
+  (set-tags header (remove #{tag} (read-tags header))))

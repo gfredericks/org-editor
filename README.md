@@ -79,8 +79,14 @@ created by the header lines.
 
 The `org-editor/write-file` function writes the same structure back to
 a file, and then there are some other functions for editing the parse
-structure such as `org-editor/read-properties` and
-`org-editor/prop-assoc`.
+structure such as:
+
+- `org-editor/read-properties`
+- `org-editor/prop-assoc`
+- `org-editor/read-tags`
+- `org-editor/set-tags`
+- `org-editor/conj-tag`
+- `org-editor/disj-tag`
 
 ## License
 
