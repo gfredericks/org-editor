@@ -5,7 +5,7 @@ A Clojure library that can edit org-files, attempting to minimize diffs.
 ## Obtention
 
 ``` clojure
-[com.gfredericks/org-editor "0.1.2"]
+[com.gfredericks/org-editor "0.1.3"]
 ```
 
 ## Usage
