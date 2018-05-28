@@ -2,7 +2,8 @@
   (:require
    [clojure.java.io    :as io]
    [clojure.spec.alpha :as s]
-   [clojure.string     :as string]))
+   [clojure.string     :as string]
+   [clojure.walk       :as walk]))
 
 (s/def ::file (s/keys :req [::prelude ::sections]))
 (s/def ::line (s/and string? #(not (re-find #"[\n\r]" %))))
@@ -93,6 +94,14 @@
                    (when-let [[_ _ k _ v] (re-matches prop-line-pattern line)]
                      [k v])))
            (into {})))))
+
+(defn prop-get
+  "Looks up the given property value, in a case-insensitive manner."
+  [section k]
+  (let [k (string/lower-case k)]
+    (->> (read-properties section)
+         (some (fn [[k' v]]
+                 (and (= k (string/lower-case k')) v))))))
 
 (defn prop-assoc
   ([section k v]
@@ -198,3 +207,29 @@
   "Removes the tag from the header, including duplicates."
   [header tag]
   (set-tags header (remove #{tag} (read-tags header))))
+
+(s/fdef add-categories
+        :args (s/cat :file ::file
+                     :default (s/? (s/nilable string?)))
+        :ret ::file
+        ;; could have a :fn that asserts that every section
+        ;; has a category key and that the input and output
+        ;; are otherwise identical
+        )
+(defn add-categories
+  "Decorates all sections in the file
+  with :com.gfredericks.org-editor/category keys, aiming to use the
+  same logic that org-mode uses."
+  ([file] (add-categories file nil))
+  ([file default]
+   (let [global (->> (::prelude file)
+                     (some #(re-matches #"#+CATEGORY:\s+(.*?)\s*" %))
+                     (second))
+         default (or global default)
+         section-fn (fn section-fn [section default]
+                      (let [cat-this-section (prop-get section "CATEGORY")
+                            cat (or cat-this-section default)]
+                        (-> section
+                            (assoc ::category cat)
+                            (update ::sections (partial map #(section-fn % cat))))))]
+     (update file ::sections (partial map #(section-fn % default))))))

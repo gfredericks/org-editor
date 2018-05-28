@@ -2,11 +2,13 @@
   (:require
    [clojure.spec.test.alpha         :as st]
    [clojure.string                  :as string]
-   [clojure.test                    :refer [are deftest is use-fixtures]]
+   [clojure.test                    :refer [are deftest is testing use-fixtures]]
    [clojure.test.check.clojure-test :refer [defspec]]
    [clojure.test.check.generators   :as gen]
    [clojure.test.check.properties   :as prop]
-   [com.gfredericks.org-editor      :as org-editor]))
+   [com.gfredericks.org-editor      :as org-editor])
+  (:import
+   (java.io StringReader)))
 
 (use-fixtures :each
   (fn [t]
@@ -17,8 +19,7 @@
         (st/unstrument)))))
 
 (deftest parse-file-test
-  (are [in out] (= out (org-editor/parse-file
-                        (java.io.StringReader. in)))
+  (are [in out] (= out (org-editor/parse-file (StringReader. in)))
     ""
     #::org-editor{:prelude  []
                   :sections []}
@@ -144,3 +145,31 @@
     "* HEADED H HEDAD EH      UMMM    :jokes:foo:jokes:"
     "jokes"
     "* HEADED H HEDAD EH      UMMM                                           :foo:"))
+
+(deftest add-categories-test
+  (let [s
+        "some random
+preamble stuff
+* Okay here's a header
+* And here's another, with a category prop
+  :PROPERTIES:
+  :CATEGORY:    tompkins
+  :END:
+
+  more stuff maybe"
+        parsed (-> s
+                   StringReader.
+                   org-editor/parse-file)]
+    (testing "without a default"
+      (let [[sec1 sec2] (-> parsed
+                            (org-editor/add-categories)
+                            (::org-editor/sections))]
+        (is (contains? sec1 ::org-editor/category))
+        (is (nil? (::org-editor/category sec1)))
+        (is (= "tompkins" (::org-editor/category sec2)))))
+    (testing "with a default"
+      (let [[sec1 sec2] (-> parsed
+                            (org-editor/add-categories "whatevs")
+                            (::org-editor/sections))]
+        (is (= "whatevs" (::org-editor/category sec1)))
+        (is (= "tompkins" (::org-editor/category sec2)))))))

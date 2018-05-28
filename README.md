@@ -80,11 +80,13 @@ a file, and then there are some other functions for editing the parse
 structure such as:
 
 - `org-editor/read-properties`
+- `org-editor/prop-get`
 - `org-editor/prop-assoc`
 - `org-editor/read-tags`
 - `org-editor/set-tags`
 - `org-editor/conj-tag`
 - `org-editor/disj-tag`
+- `org-editor/add-categories`
 
 ## License
 
