@@ -172,4 +172,12 @@ preamble stuff
                             (org-editor/add-categories "whatevs")
                             (::org-editor/sections))]
         (is (= "whatevs" (::org-editor/category sec1)))
+        (is (= "tompkins" (::org-editor/category sec2)))))
+    (testing "with a default and a global"
+      (let [[sec1 sec2] (-> (str "some line\n#+CATEGORY: Goober Brigade\nother line\n" s)
+                            StringReader.
+                            org-editor/parse-file
+                            (org-editor/add-categories "whatevs")
+                            (::org-editor/sections))]
+        (is (= "Goober Brigade" (::org-editor/category sec1)))
         (is (= "tompkins" (::org-editor/category sec2)))))))

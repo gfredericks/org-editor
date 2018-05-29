@@ -223,7 +223,7 @@
   ([file] (add-categories file nil))
   ([file default]
    (let [global (->> (::prelude file)
-                     (some #(re-matches #"#+CATEGORY:\s+(.*?)\s*" %))
+                     (some #(re-matches #"#\+CATEGORY:\s+(.*?)\s*" %))
                      (second))
          default (or global default)
          section-fn (fn section-fn [section default]
