@@ -75,9 +75,14 @@ returns:
 The base parse is fairly low level, it only parses the structure
 created by the header lines.
 
-The `org-editor/write-file` function writes the same structure back to
-a file, and then there are some other functions for editing the parse
-structure such as:
+To write the same structure back to a file:
+
+``` clojure
+(with-open [w (io/writer "some.file.org")]
+  (org/write-file w map-with-prelude-and-sections))
+```
+
+There are some other functions for editing the parse structure such as:
 
 - `org-editor/read-properties`
 - `org-editor/prop-get`
