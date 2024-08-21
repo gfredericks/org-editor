@@ -14,6 +14,11 @@
 (def header-line-regex #"(\*+) (.*)")
 (s/def ::header (s/and string? #(re-matches header-line-regex %)))
 
+(defn ^:private timestamp-line?
+  [line]
+  ;; obvs this could be made more precise
+  (re-find #"DEADLINE|SCHEDULED" line))
+
 (s/fdef parse-file
         :args (s/cat :reader #(instance? java.io.Reader %))
         :ret ::file)
@@ -113,8 +118,7 @@
                                        (format ":%s: %s" k v)
                                        ":END:"])]
          (assoc section ::prelude
-                (if (some->> (first prelude)
-                             (re-find #"DEADLINE|SCHEDULED"))
+                (if (timestamp-line? (first prelude))
                   (concat (take 1 prelude) prop-lines (drop 1 prelude))
                   (concat prop-lines prelude))))
 
@@ -147,6 +151,17 @@
    (reduce (fn [section [k v]] (prop-assoc section k v))
            section
            (cons [k v] (partition 2 more-kvs)))))
+
+(defn prelude-tail
+  [{::keys [prelude]}]
+  "Returns the prelude of the given section, without a scheduling line or
+  properties drawer."
+  (let [conformed (s/conform ::prelude-with-properties prelude)]
+    (if (= ::s/invalid conformed)
+      (if (and (seq prelude) (timestamp-line? (first prelude)))
+        (rest prelude)
+        prelude)
+      (:remaining-prelude conformed))))
 
 ;;
 ;; Tags

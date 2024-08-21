@@ -181,3 +181,19 @@ preamble stuff
                             (::org-editor/sections))]
         (is (= "Goober Brigade" (::org-editor/category sec1)))
         (is (= "tompkins" (::org-editor/category sec2)))))))
+
+(deftest prelude-tail-test
+  (are [prelude drop-num]
+      (= (drop drop-num prelude)
+         (org-editor/prelude-tail {::org-editor/prelude prelude}))
+    ["  SCHEDULED: <2024-08-22 Thu>" "  Ope!" "  Cool"] 1
+    ["this has" "a few" "lines"] 0
+    ["  :PROPERTIES:" "  :FOO: oops" "  :END:" "thomas" "aquinas"] 3
+    ["  DEADLINE <2024-08-23 Fri .+5d>"
+     "  :PROPERTIES:"
+     "  :FOO: oops"
+     "  :BAR: whaps"
+     "  :END:"
+     "  several"
+     "more"
+     "      lines"] 5))
